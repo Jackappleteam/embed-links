@@ -3,6 +3,7 @@ import {
   renderPage, renderOembed, needsOembed, encodeData, LIMITS,
 } from "./render.js";
 import { md } from "./markdown.js";
+import { DEFAULT_WORKER_URL } from "./config.js";
 
 /* ================= tiny DOM helpers ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -82,14 +83,14 @@ function getSettings() {
   const det = detectSite();
   const st = readLS(SETKEY, {});
   return {
-    method: st.method || (det.owner ? "github" : "manual"),
+    method: st.method || (DEFAULT_WORKER_URL ? "worker" : det.owner ? "github" : "manual"),
     owner: st.owner || det.owner,
     repo: st.repo || det.repo,
     branch: st.branch || "",
     dir: (st.dir || "e").replace(/^\/+|\/+$/g, "") || "e",
     siteUrl: st.siteUrl || det.siteUrl,
     token: st.token || "",
-    workerUrl: (st.workerUrl || "").replace(/\/+$/, ""),
+    workerUrl: (st.workerUrl || DEFAULT_WORKER_URL || "").replace(/\/+$/, ""),
   };
 }
 const setSettings = (s) => localStorage.setItem(SETKEY, JSON.stringify(s));
@@ -539,7 +540,7 @@ function openSettings() {
     wrap("Token", (() => { const t = h("input", { class: "in", type: "password", value: s.token, placeholder: "github_pat_…", autocomplete: "off" }); t.addEventListener("input", () => (s.token = t.value.trim())); return t; })()),
   );
   wrapWk.append(
-    h("div", { class: "note" }, "Instant links with no commits. Deploy ", h("code", {}, "worker/worker.js"), " to Cloudflare Workers (see the README), then paste its URL. The embed is encoded in the link itself, so it must stay under ~2,000 characters."),
+    h("div", { class: "note" }, "Instant short links with no commits and no token for visitors. Deploy ", h("code", {}, "worker/"), " to Cloudflare Workers (see the README), then paste its URL here or set it in js/config.js. Without KV storage it falls back to long links that must stay under ~2,000 characters."),
     bound("Worker URL", s, "workerUrl", { ph: "https://embeds.you.workers.dev" }),
   );
   wrapMn.append(h("div", { class: "note" }, "No credentials. After you press Create Link you get an ", h("code", {}, "index.html"), " to place at ", h("code", {}, "e/<id>/"), " in your repo yourself."), bound("Site URL", s, "siteUrl", { ph: "https://you.github.io/repo/" }));
@@ -619,7 +620,12 @@ async function createLink() {
   try {
     if (s.method === "worker") {
       if (!s.workerUrl) throw new Error("Set your Worker URL in Link settings first.");
-      const link = `${s.workerUrl}/?d=${await encodeData(data)}`;
+      let link = "";
+      try {
+        const r = await fetch(`${s.workerUrl}/api/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+        if (r.ok) link = (await r.json()).url;
+      } catch {}
+      if (!link) link = `${s.workerUrl}/?d=${await encodeData(data)}`;
       if (link.length > 2000) throw new Error(`This embed makes a ${link.length}-character link; Discord needs under ~2,048. Shorten it, or use GitHub Pages mode.`);
       done(link);
       record(link);

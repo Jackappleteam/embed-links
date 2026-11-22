@@ -1,0 +1,8 @@
+name = "embed-links"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Run `npx wrangler kv namespace create EMBEDS` and paste the id it prints here.
+[[kv_namespaces]]
+binding = "EMBEDS"
+id = "PASTE_KV_NAMESPACE_ID_HERE"

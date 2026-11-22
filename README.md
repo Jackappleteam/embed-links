@@ -14,10 +14,21 @@ Setup (gear icon in the sidebar → Link settings):
 2. Owner, repo and site URL are auto-detected on `*.github.io`. Set them yourself for a custom domain.
 3. The token stays in this browser's localStorage only.
 
-### Other modes
+### Worker mode (recommended: no token for visitors)
 
-- **Worker**: instant links, no commits. Deploy `worker/worker.js` (`npx wrangler deploy worker/worker.js --name embed-links --compatibility-date 2024-11-01`) and paste the URL. The embed is compressed into the link (`?d=…`), so it must stay under ~2,000 characters.
-- **Manual**: no token. You get `index.html` to upload to `e/<id>/` yourself.
+Deploy `worker/` to Cloudflare Workers once. It stores each embed in KV and serves short links like `https://embed-links.you.workers.dev/e/ab12cd3`. Then set `DEFAULT_WORKER_URL` in `js/config.js` and push. Every visitor can create links with no setup.
+
+```powershell
+cd worker
+npx wrangler kv namespace create EMBEDS   # paste the printed id into wrangler.toml
+npx wrangler deploy
+```
+
+Without the KV binding the Worker falls back to long self-contained links (`?d=…`, under ~2,000 characters).
+
+### Manual mode
+
+No credentials. You get `index.html` to upload to `e/<id>/` yourself.
 
 ## Components V2 limits (enforced by the builder)
 
