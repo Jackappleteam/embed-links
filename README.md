@@ -1,34 +1,24 @@
-# Unfurl
+# Unfurl: Discord Embed Link Generator
 
-A static, GitHub Pages–ready clone of message.style's **Embed Links** tool: a builder, a JSON editor, a live Discord preview, and link creation, including **Components V2** layouts.
+A static site (GitHub Pages) with a builder, a JSON editor, a live Discord preview and link creation, including **Components V2** layouts. Visitors need no account, token or setup.
 
-No build step. Push the folder to a repo and enable Pages (Settings → Pages → deploy from branch, `/ (root)`).
+## How it works
 
-## How links work on GitHub Pages
+Discord only reads server-rendered HTML, so each link points at a small Cloudflare Worker (`worker/`) that stores the embed in KV and serves the page Discord reads:
 
-Discord only reads the HTML a server sends, and GitHub Pages is static, so every link is its own tiny page. **Create Link** commits `e/<id>/index.html` (plus `oembed.json` when you set an author or provider URL) to your repo through the GitHub API. Pages serves it a minute later and the app shows **Live** once it is up.
+- Create Link sends the embed to `POST <worker>/api/create` and gets back a short link like `<worker>/e/ab12cd3`.
+- If the Worker or its KV storage is unreachable, the site falls back to a self-contained link (`<worker>/?d=…`) that works without storage as long as it stays under ~2,000 characters.
 
-Setup (gear icon in the sidebar → Link settings):
+The Worker URL lives in `js/config.js` (`WORKER_URL`). Change it there if you redeploy under another name.
 
-1. Create a fine-grained token at https://github.com/settings/personal-access-tokens/new limited to this repo, with **Contents: Read and write**.
-2. Owner, repo and site URL are auto-detected on `*.github.io`. Set them yourself for a custom domain.
-3. The token stays in this browser's localStorage only.
-
-### Worker mode (recommended: no token for visitors)
-
-Deploy `worker/` to Cloudflare Workers once. It stores each embed in KV and serves short links like `https://embed-links.you.workers.dev/e/ab12cd3`. Then set `DEFAULT_WORKER_URL` in `js/config.js` and push. Every visitor can create links with no setup.
+## Deploying the Worker
 
 ```powershell
 cd worker
+npx wrangler login
 npx wrangler kv namespace create EMBEDS   # paste the printed id into wrangler.toml
 npx wrangler deploy
 ```
-
-Without the KV binding the Worker falls back to long self-contained links (`?d=…`, under ~2,000 characters).
-
-### Manual mode
-
-No credentials. You get `index.html` to upload to `e/<id>/` yourself.
 
 ## Components V2 limits (enforced by the builder)
 
@@ -40,3 +30,5 @@ Single top-level Container, up to 40 components, 3,000-byte payload, 10 gallery 
 - `js/app.js`: builder, JSON/HTML tabs, preview, link creation
 - `js/render.js`: payload cleaning and page generation (shared with the Worker)
 - `js/markdown.js`: Discord-style markdown for the preview
+- `js/config.js`: Worker URL
+- `worker/`: Cloudflare Worker (KV short links)

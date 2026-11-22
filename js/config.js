@@ -1,3 +1,3 @@
-// Paste your deployed Worker URL here (no trailing slash) so every visitor can create
-// links with no token or setup, e.g. "https://embed-links.yourname.workers.dev".
-export const DEFAULT_WORKER_URL = "https://embed-links.jackappleteam.workers.dev";
+// The Worker that stores and serves every embed link. Everyone who uses the site
+// shares this one, so visitors never need a token or any setup.
+export const WORKER_URL = "https://embed-links.jackappleteam.workers.dev";

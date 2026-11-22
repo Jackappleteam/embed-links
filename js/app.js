@@ -3,7 +3,7 @@ import {
   renderPage, renderOembed, needsOembed, encodeData, LIMITS,
 } from "./render.js";
 import { md } from "./markdown.js";
-import { DEFAULT_WORKER_URL } from "./config.js";
+import { WORKER_URL } from "./config.js";
 
 /* ================= tiny DOM helpers ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -66,40 +66,7 @@ const readLS = (k, d) => {
 };
 const exportData = () => prune(structuredClone(state));
 
-/* ================= settings ================= */
-function detectSite() {
-  const host = location.hostname;
-  const parts = location.pathname.split("/").filter(Boolean);
-  if (host.endsWith(".github.io")) {
-    const owner = host.split(".")[0];
-    const first = parts[0];
-    if (first && !first.includes(".")) return { owner, repo: first, siteUrl: `${location.origin}/${first}/` };
-    return { owner, repo: host, siteUrl: `${location.origin}/` };
-  }
-  const dir = location.pathname.replace(/[^/]*$/, "");
-  return { owner: "", repo: "", siteUrl: location.origin + dir };
-}
-function getSettings() {
-  const det = detectSite();
-  const st = readLS(SETKEY, {});
-  return {
-    method: st.method || (DEFAULT_WORKER_URL ? "worker" : det.owner ? "github" : "manual"),
-    owner: st.owner || det.owner,
-    repo: st.repo || det.repo,
-    branch: st.branch || "",
-    dir: (st.dir || "e").replace(/^\/+|\/+$/g, "") || "e",
-    siteUrl: st.siteUrl || det.siteUrl,
-    token: st.token || "",
-    workerUrl: (st.workerUrl || DEFAULT_WORKER_URL || "").replace(/\/+$/, ""),
-  };
-}
-const setSettings = (s) => localStorage.setItem(SETKEY, JSON.stringify(s));
-const slash = (u) => (u.endsWith("/") ? u : u + "/");
-function exampleLink() {
-  const s = getSettings();
-  if (s.method === "worker" && s.workerUrl) return `${s.workerUrl}/?d=…`;
-  return `${slash(s.siteUrl)}${s.dir}/a1b2c3d4/`;
-}
+const exampleLink = () => `${WORKER_URL}/e/a1b2c3d`;
 
 /* ================= form helpers ================= */
 function wrap(label, el, extra) {
@@ -350,15 +317,14 @@ function syncJson() {
 }
 let htmlTa;
 function pageFor(id) {
-  const link = `${slash(getSettings().siteUrl)}${getSettings().dir}/${id}/`;
-  return renderPage(exportForRender(), { oembedHref: needsOembed(state) ? link + "oembed.json" : null });
+  return renderPage(exportForRender(), { oembedHref: needsOembed(state) ? `${WORKER_URL}/e/${id}/oembed.json` : null });
 }
 const exportForRender = () => normalize(exportData());
 function buildHtml() {
   const root = $("#pane-html");
   htmlTa = h("textarea", { class: "code-ta", readonly: true, spellcheck: "false", "aria-label": "Generated HTML" });
   root.replaceChildren(
-    h("div", { class: "hint" }, "This is the exact page Discord's crawler reads. It is what gets committed to your repo when you create a link."),
+    h("div", { class: "hint" }, "This is the exact page Discord's crawler reads. It is what the link service serves when Discord opens your link."),
     htmlTa,
     h("div", { class: "pane-tools" },
       h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(htmlTa.value).then(() => toast("HTML copied", "good")) }, "Copy HTML"),
@@ -367,7 +333,7 @@ function buildHtml() {
   );
 }
 function syncHtml() {
-  if (htmlTa) htmlTa.value = pageFor("a1b2c3d4");
+  if (htmlTa) htmlTa.value = pageFor("a1b2c3d");
 }
 function download(name, text, type) {
   const a = h("a", { href: URL.createObjectURL(new Blob([text], { type })), download: name });
@@ -516,59 +482,7 @@ function modal(title, body, buttons = []) {
   return { close, el: ov };
 }
 
-/* ================= settings modal ================= */
-function openSettings() {
-  const s = getSettings();
-  const body = h("div", {});
-  const wrapGh = h("div", {});
-  const wrapWk = h("div", {});
-  const wrapMn = h("div", {});
-  const seg = h("div", { class: "seg" });
-  const show = () => {
-    wrapGh.hidden = s.method !== "github";
-    wrapWk.hidden = s.method !== "worker";
-    wrapMn.hidden = s.method !== "manual";
-    [...seg.children].forEach((b) => b.classList.toggle("on", b.dataset.m === s.method));
-  };
-  [["github", "GitHub Pages"], ["worker", "Worker"], ["manual", "Manual"]].forEach(([m, l]) =>
-    seg.append(h("button", { "data-m": m, onclick: () => { s.method = m; show(); } }, l)));
-  wrapGh.append(
-    h("div", { class: "note" }, "Each link is committed to your repo as a small static page (", h("code", {}, "e/<id>/index.html"), ") and served by GitHub Pages. Create a ", h("a", { href: "https://github.com/settings/personal-access-tokens/new", target: "_blank", rel: "noopener" }, "fine-grained token"), " limited to this repo with ", h("b", {}, "Contents: Read and write"), ". It is stored only in this browser."),
-    h("div", { class: "row" }, bound("Owner", s, "owner"), bound("Repository", s, "repo")),
-    h("div", { class: "row" }, bound("Branch", s, "branch", { ph: "default branch" }), bound("Folder", s, "dir")),
-    bound("Site URL", s, "siteUrl", { ph: "https://you.github.io/repo/", hint: "Where this site is served from (use your custom domain if you have one)." }),
-    wrap("Token", (() => { const t = h("input", { class: "in", type: "password", value: s.token, placeholder: "github_pat_…", autocomplete: "off" }); t.addEventListener("input", () => (s.token = t.value.trim())); return t; })()),
-  );
-  wrapWk.append(
-    h("div", { class: "note" }, "Instant short links with no commits and no token for visitors. Deploy ", h("code", {}, "worker/"), " to Cloudflare Workers (see the README), then paste its URL here or set it in js/config.js. Without KV storage it falls back to long links that must stay under ~2,000 characters."),
-    bound("Worker URL", s, "workerUrl", { ph: "https://embeds.you.workers.dev" }),
-  );
-  wrapMn.append(h("div", { class: "note" }, "No credentials. After you press Create Link you get an ", h("code", {}, "index.html"), " to place at ", h("code", {}, "e/<id>/"), " in your repo yourself."), bound("Site URL", s, "siteUrl", { ph: "https://you.github.io/repo/" }));
-  body.append(seg, wrapGh, wrapWk, wrapMn);
-  show();
-  const m = modal("Link settings", body, [
-    h("button", { class: "btn ghost", onclick: () => m.close() }, "Cancel"),
-    h("button", { class: "btn primary", onclick: () => { setSettings(s); m.close(); update(); toast("Settings saved", "good"); } }, "Save"),
-  ]);
-}
-
 /* ================= create link ================= */
-const randomId = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
-const b64 = (str) => {
-  const bytes = new TextEncoder().encode(str);
-  let s = "";
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s);
-};
-async function gh(s, path, opts = {}) {
-  const r = await fetch("https://api.github.com" + path, {
-    ...opts,
-    headers: { Authorization: `Bearer ${s.token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.message || `GitHub API ${r.status}`);
-  return j;
-}
 function blockers() {
   const out = [];
   if (state.url && !isHttp(state.url)) out.push("The redirect URL must start with http:// or https://");
@@ -589,83 +503,40 @@ const linkTitle = () => (state.use_component ? (JSON.stringify(state.component).
 async function createLink() {
   const bl = blockers();
   if (bl.length) return toast(bl[0], "bad");
-  const s = getSettings();
   const data = exportForRender();
-  const id = randomId();
-  const oembed = needsOembed(data);
 
-  const status = h("div", { class: "status" }, h("span", { class: "dot spin" }), h("span", {}, "Working…"));
+  const status = h("div", { class: "status" }, h("span", { class: "dot spin" }), h("span", {}, "Creating link…"));
   const linkInput = h("input", { class: "in", readonly: true, value: "", "aria-label": "Embed link" });
   const body = h("div", {}, h("div", { class: "copy-row" }, linkInput, h("button", { class: "btn", onclick: () => linkInput.value && navigator.clipboard.writeText(linkInput.value).then(() => toast("Link copied", "good")) }, "Copy")), status);
   const openBtn = h("a", { class: "btn", href: "#", target: "_blank", rel: "noopener", hidden: true }, "Open");
   const m = modal("Create Link", body, [
     h("a", { class: "btn ghost", href: "https://discord.com/developers/embeds", target: "_blank", rel: "noopener" }, "Embed Debugger"),
     openBtn,
-    h("button", { class: "btn primary", onclick: () => { aborted = true; m.close(); } }, "Done"),
+    h("button", { class: "btn primary", onclick: () => m.close() }, "Done"),
   ]);
-  let aborted = false;
   const setStatus = (text, cls = "") => status.replaceChildren(h("span", { class: "dot " + cls }), h("span", {}, text));
-  const record = (link, extra = {}) => {
-    const all = readLS(LINKKEY, []);
-    all.unshift({ id, link, title: linkTitle(), created: Date.now(), method: s.method, data: exportData(), ...extra });
-    localStorage.setItem(LINKKEY, JSON.stringify(all.slice(0, 100)));
-  };
-  const done = (link) => {
+
+  try {
+    let link = "";
+    try {
+      const r = await fetch(`${WORKER_URL}/api/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+      if (r.ok) link = (await r.json()).url;
+    } catch {}
+    if (!link) {
+      // Link service unreachable or storage missing: fall back to a self-contained link.
+      link = `${WORKER_URL}/?d=${await encodeData(data)}`;
+      if (link.length > 2000) throw new Error("Couldn't reach the link service, and this embed is too long for a fallback link. Try again in a moment.");
+    }
     linkInput.value = link;
     openBtn.href = link;
     openBtn.hidden = false;
     linkInput.select();
-  };
-
-  try {
-    if (s.method === "worker") {
-      if (!s.workerUrl) throw new Error("Set your Worker URL in Link settings first.");
-      let link = "";
-      try {
-        const r = await fetch(`${s.workerUrl}/api/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
-        if (r.ok) link = (await r.json()).url;
-      } catch {}
-      if (!link) link = `${s.workerUrl}/?d=${await encodeData(data)}`;
-      if (link.length > 2000) throw new Error(`This embed makes a ${link.length}-character link; Discord needs under ~2,048. Shorten it, or use GitHub Pages mode.`);
-      done(link);
-      record(link);
-      setStatus("Ready. Paste it in Discord.", "on");
-    } else if (s.method === "github") {
-      if (!s.token || !s.owner || !s.repo) {
-        m.close();
-        toast("Add your GitHub details first", "bad");
-        return openSettings();
-      }
-      const link = `${slash(s.siteUrl)}${s.dir}/${id}/`;
-      const files = [[`${s.dir}/${id}/index.html`, renderPage(data, { oembedHref: oembed ? link + "oembed.json" : null })]];
-      if (oembed) files.push([`${s.dir}/${id}/oembed.json`, JSON.stringify(renderOembed(data))]);
-      setStatus("Committing to GitHub…", "spin");
-      for (const [path, content] of files)
-        await gh(s, `/repos/${s.owner}/${s.repo}/contents/${path}`, { method: "PUT", body: JSON.stringify({ message: `Add embed link ${id}`, content: b64(content), branch: s.branch || undefined }) });
-      done(link);
-      record(link, { owner: s.owner, repo: s.repo, branch: s.branch, paths: files.map((f) => f[0]) });
-      setStatus("Committed. Waiting for GitHub Pages to deploy…", "spin");
-      let live = false;
-      for (let i = 0; i < 48 && !aborted && !live; i++) {
-        await sleep(i ? 5000 : 2500);
-        try {
-          live = (await fetch(link + "?_=" + Date.now(), { cache: "no-store" })).ok;
-        } catch {}
-      }
-      if (!aborted) setStatus(live ? "Live. Paste it in Discord." : "Committed, but the page isn't live yet. Check that Pages is enabled for this repo, then try the link in a minute.", live ? "on" : "");
-    } else {
-      const link = `${slash(s.siteUrl)}${s.dir}/${id}/`;
-      const html = renderPage(data, { oembedHref: oembed ? link + "oembed.json" : null });
-      done(link);
-      record(link, { manual: true });
-      status.replaceChildren(h("div", {},
-        h("div", { style: "margin-bottom:8px" }, "Upload the file(s) to ", h("code", {}, `${s.dir}/${id}/`), " in your repo, then the link above will work."),
-        h("div", { class: "pane-tools", style: "margin:0" },
-          h("button", { class: "btn sm", onclick: () => download("index.html", html, "text/html") }, "Download index.html"),
-          oembed ? h("button", { class: "btn sm", onclick: () => download("oembed.json", JSON.stringify(renderOembed(data)), "application/json") }, "Download oembed.json") : null)));
-    }
+    const all = readLS(LINKKEY, []);
+    all.unshift({ id: link.split("/").pop(), link, title: linkTitle(), created: Date.now(), data: exportData() });
+    localStorage.setItem(LINKKEY, JSON.stringify(all.slice(0, 100)));
+    setStatus("Ready. Paste it in Discord.", "on");
   } catch (err) {
-    setStatus(err.message || String(err), "");
+    setStatus(err.message || String(err));
     status.style.color = "var(--red)";
   }
 }
@@ -682,24 +553,10 @@ function openLinks() {
     h("div", { class: "b" },
       h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(l.link).then(() => toast("Link copied", "good")) }, "Copy"),
       h("button", { class: "btn sm", onclick: () => { state = normalize(l.data); save(); setTab("builder"); update(); m.close(); toast("Loaded into the editor"); } }, "Edit as new"),
-      h("button", { class: "btn sm danger", onclick: async (ev) => {
-        const btn = ev.currentTarget;
-        btn.disabled = true;
-        try {
-          const s = getSettings();
-          if (l.paths && s.token) {
-            for (const p of l.paths) {
-              const q = l.branch ? `?ref=${encodeURIComponent(l.branch)}` : "";
-              const meta = await gh(s, `/repos/${l.owner}/${l.repo}/contents/${p}${q}`);
-              await gh(s, `/repos/${l.owner}/${l.repo}/contents/${p}`, { method: "DELETE", body: JSON.stringify({ message: `Remove embed link ${l.id}`, sha: meta.sha, branch: l.branch || undefined }) });
-            }
-          } else if (l.paths) toast("No token set, removed from this list only.");
-        } catch (err) {
-          toast("Could not delete from GitHub: " + err.message, "bad");
-        }
+      h("button", { class: "btn sm danger", onclick: () => {
         localStorage.setItem(LINKKEY, JSON.stringify(readLS(LINKKEY, []).filter((x) => x.id !== l.id)));
         render();
-      } }, "Delete")));
+      } }, "Remove")));
   const list = h("div", { class: "links-list" });
   render();
   const m = modal("My links", list, [h("button", { class: "btn primary", onclick: () => m.close() }, "Close")]);
@@ -709,13 +566,9 @@ function openLinks() {
 function init() {
   $("#railMain").innerHTML = I.pen;
   $("#railLinks").innerHTML = I.list;
-  $("#railSettings").innerHTML = I.gear;
   $("#railGit").innerHTML = I.git;
-  const s = getSettings();
-  if (s.owner && s.repo) $("#railGit").href = `https://github.com/${s.owner}/${s.repo}`;
   $("#railMain").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
   $("#railLinks").onclick = openLinks;
-  $("#railSettings").onclick = openSettings;
   $("#createBtn").onclick = createLink;
   $("#resetBtn").onclick = () => {
     const m = modal("Reset editor?", h("p", {}, "This clears everything you've typed. Links you already created are not affected."), [
