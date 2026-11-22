@@ -564,9 +564,7 @@ function openLinks() {
 
 /* ================= init ================= */
 function init() {
-  $("#railMain").innerHTML = I.pen;
   $("#railLinks").innerHTML = I.list;
-  $("#railMain").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
   $("#railLinks").onclick = openLinks;
   $("#createBtn").onclick = createLink;
   $("#resetBtn").onclick = () => {
