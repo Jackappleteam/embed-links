@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discord Embed Link Generator</title>
+<meta name="description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook.">
+<meta name="theme-color" content="#5865F2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235865f2'/%3E%3Cpath d='M9 12h14M9 17h9M9 22h12' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Main">
+    <div class="rail-logo"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#16161a" stroke-width="3.2" stroke-linecap="round"><path d="M5 8h14M5 13h9M5 18h12"/></svg></span>Unfurl</div>
+    <button class="rail-btn active" data-label="Builder" title="Builder" aria-label="Builder" id="railMain"></button>
+    <button class="rail-btn" data-label="My links" title="My links" aria-label="My links" id="railLinks"></button>
+    <button class="rail-btn" data-label="Settings" title="Settings" aria-label="Settings" id="railSettings"></button>
+    <a class="rail-btn" data-label="GitHub" title="Source on GitHub" aria-label="GitHub" id="railGit" href="https://github.com" target="_blank" rel="noopener"></a>
+  </nav>
+
+  <main class="page">
+    <header class="head">
+      <h1>Discord <em>Embed</em> Link Generator</h1>
+      <p>This is a simple app that creates links which Discord shows as a rich embed or a Components V2 layout when pasted. No bot or webhook needed.</p>
+      <p>Fill in the fields, press Create Link, and paste the link in a Discord message.</p>
+    </header>
+
+    <div class="cols">
+      <section class="left">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="builder" role="tab">Builder</button>
+          <button class="tab" data-tab="json" role="tab">JSON</button>
+          <button class="tab" data-tab="html" role="tab">HTML</button>
+        </div>
+        <div id="pane-builder" class="pane"></div>
+        <div id="pane-json" class="pane" hidden></div>
+        <div id="pane-html" class="pane" hidden></div>
+        <div class="actions">
+          <button class="btn primary" id="createBtn">Create Link</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+        </div>
+      </section>
+
+      <aside class="right">
+        <div class="side-title">Preview</div>
+        <div id="preview"></div>
+        <div id="stats" class="stats"></div>
+      </aside>
+    </div>
+  </main>
+</div>
+<div id="modal-root"></div>
+<div id="toasts"></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
