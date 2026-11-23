@@ -3,15 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Discord Embed Link Generator</title>
-<meta name="description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook.">
+<title>Unfurl — Discord Embed Link Generator (Components V2)</title>
+<meta name="description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook, no account — just a builder, a JSON editor, and a live preview.">
+<meta name="keywords" content="discord embed generator, discord link preview, discord components v2, discord embed link, discord og tags, discord rich embed, unfurl link discord">
+<meta name="author" content="Jack">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://jackappleteam.github.io/embed-links/">
 <meta name="theme-color" content="#fafaf9">
-<meta property="og:title" content="Discord Embed Link Generator">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jackappleteam.github.io/embed-links/">
+<meta property="og:title" content="Unfurl — Discord Embed Link Generator">
 <meta property="og:description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed.">
 <meta property="og:site_name" content="Unfurl">
 <meta property="og:image" content="https://jackappleteam.github.io/embed-links/assets/banner.png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Unfurl — Discord Embed Link Generator">
+<meta name="twitter:description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed.">
+<meta name="twitter:image" content="https://jackappleteam.github.io/embed-links/assets/banner.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23fafaf9'/%3E%3Cpath d='M9 12h14M9 17h9M9 22h12' stroke='%230c0a09' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unfurl","alternateName":"Discord Embed Link Generator","url":"https://jackappleteam.github.io/embed-links/","description":"Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed.","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script id="discord:component-embed" type="application/json">{"component":{"type":17,"accent_color":16448249,"components":[{"type":9,"components":[{"type":10,"content":"-# Unfurl"}],"accessory":{"type":11,"media":{"url":"https://jackappleteam.github.io/embed-links/assets/icon.png"}}},{"type":10,"content":"## [Discord Embed Link Generator](https://jackappleteam.github.io/embed-links/)"},{"type":10,"content":"Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed."},{"type":12,"items":[{"media":{"url":"https://jackappleteam.github.io/embed-links/assets/banner.png"}}]},{"type":14,"divider":true,"spacing":1},{"type":1,"components":[{"type":2,"style":5,"url":"https://jackappleteam.github.io/embed-links/","label":"Open the tool"},{"type":2,"style":5,"url":"https://github.com/Jackappleteam/embed-links","label":"GitHub"}]}]}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,15 +60,36 @@
       </section>
 
       <aside class="right">
-        <div class="side-title">Preview</div>
+        <h2 class="side-title">Preview</h2>
         <div id="preview"></div>
         <div id="stats" class="stats"></div>
       </aside>
     </div>
+
+    <section class="about">
+      <div class="about-col">
+        <h2>What is Components V2?</h2>
+        <p>Components V2 is Discord's newer layout system for link previews — containers, text, dividers, image galleries and buttons instead of the classic title/description embed. Unfurl builds either kind of link.</p>
+      </div>
+      <div class="about-col">
+        <h2>Do I need a bot or webhook?</h2>
+        <p>No. The link itself carries the embed data. Discord reads it when the link is pasted, the same way it reads a normal website preview — no bot token, server, or webhook required.</p>
+      </div>
+      <div class="about-col">
+        <h2>How do I use it?</h2>
+        <p>Fill in the builder or paste JSON, check the live preview on the right, then press Create Link. Paste the generated link into any Discord message to see it unfurl.</p>
+      </div>
+    </section>
   </main>
 </div>
 <div id="modal-root"></div>
 <div id="toasts"></div>
+<noscript>
+  <p style="max-width:560px;margin:40px auto;padding:0 20px;font:15px/1.6 sans-serif;color:#a8a29e">
+    Unfurl is a free Discord embed link generator — create links that Discord unfurls into rich embeds or
+    Components V2 layouts, no bot or webhook required. Enabling JavaScript is required to use the builder.
+  </p>
+</noscript>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

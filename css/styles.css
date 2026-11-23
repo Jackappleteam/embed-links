@@ -40,6 +40,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:start;margin-top:28px}
 .right{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;text-align:left}
 .side-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+.about{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px;padding-top:36px;border-top:1px solid var(--line);text-align:left}
+.about h2{font-size:15px;font-weight:600;color:var(--text);margin:0 0 8px}
+.about p{font-size:13.5px;line-height:1.6;color:var(--muted);margin:0}
+@media (max-width:760px){.about{grid-template-columns:1fr;gap:22px}}
 .left{text-align:left}
 
 .tabs{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:3px;margin-bottom:18px}

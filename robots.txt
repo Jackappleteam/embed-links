@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jackappleteam.github.io/embed-links/sitemap.xml
