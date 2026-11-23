@@ -499,6 +499,9 @@ function blockers() {
   return out;
 }
 const linkTitle = () => (state.use_component ? (JSON.stringify(state.component).match(/"content":"([^"]{1,60})/)?.[1] || "Component embed").replace(/^[#\-\s]+/, "") : state.embed.title || state.embed.description.slice(0, 50) || "Embed link");
+// Wraps a link in markdown using a blank Braille character (U+2800) as the
+// link text, so Discord renders only the embed with no visible link text.
+const invisLink = (url) => `[⠀](${url})`;
 
 async function createLink() {
   const bl = blockers();
@@ -507,7 +510,13 @@ async function createLink() {
 
   const status = h("div", { class: "status" }, h("span", { class: "dot spin" }), h("span", {}, "Creating link…"));
   const linkInput = h("input", { class: "in", readonly: true, value: "", "aria-label": "Embed link" });
-  const body = h("div", {}, h("div", { class: "copy-row" }, linkInput, h("button", { class: "btn", onclick: () => linkInput.value && navigator.clipboard.writeText(linkInput.value).then(() => toast("Link copied", "good")) }, "Copy")), status);
+  const body = h("div", {},
+    h("div", { class: "copy-row" },
+      linkInput,
+      h("button", { class: "btn", onclick: () => linkInput.value && navigator.clipboard.writeText(linkInput.value).then(() => toast("Link copied", "good")) }, "Copy")),
+    h("button", { class: "btn ghost sm invis-copy", onclick: () => linkInput.value && navigator.clipboard.writeText(invisLink(linkInput.value)).then(() => toast("Invisible link copied", "good")) },
+      "Copy as invisible link"),
+    status);
   const openBtn = h("a", { class: "btn", href: "#", target: "_blank", rel: "noopener", hidden: true }, "Open");
   const m = modal("Create Link", body, [
     h("a", { class: "btn ghost", href: "https://discord.com/developers/embeds", target: "_blank", rel: "noopener" }, "Embed Debugger"),
@@ -552,6 +561,7 @@ function openLinks() {
     h("div", { class: "u" }, l.link),
     h("div", { class: "b" },
       h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(l.link).then(() => toast("Link copied", "good")) }, "Copy"),
+      h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(invisLink(l.link)).then(() => toast("Invisible link copied", "good")) }, "Copy invisible"),
       h("button", { class: "btn sm", onclick: () => { state = normalize(l.data); save(); setTab("builder"); update(); m.close(); toast("Loaded into the editor"); } }, "Edit as new"),
       h("button", { class: "btn sm danger", onclick: () => {
         localStorage.setItem(LINKKEY, JSON.stringify(readLS(LINKKEY, []).filter((x) => x.id !== l.id)));

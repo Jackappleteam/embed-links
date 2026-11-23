@@ -135,6 +135,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .seg button{flex:1;border:0;border-radius:6px;background:transparent;color:var(--muted);height:30px;cursor:pointer;font-weight:500;font-size:13px;transition:background .12s,color .12s}
 .seg button.on{background:var(--raised);color:var(--text)}
 .copy-row{display:flex;gap:8px}.copy-row .in{font-family:var(--mono)}
+.invis-copy{margin-top:10px}
 .status{display:flex;align-items:center;gap:9px;margin:14px 0 4px;font-size:13.5px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none}.dot.on{background:var(--green)}.dot.spin{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.3}}
