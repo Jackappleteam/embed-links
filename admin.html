@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Unfurl</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Main">
+    <a class="rail-logo" href="./" style="text-decoration:none"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0c0a09" stroke-width="3.2" stroke-linecap="round"><path d="M5 8h14M5 13h9M5 18h12"/></svg></span>Unfurl</a>
+    <div class="rail-spacer-x"></div>
+    <div id="railAuth"></div>
+  </nav>
+
+  <main class="page">
+    <header class="head">
+      <h1>Admin</h1>
+      <p>Every link created through Unfurl. Owner-created links can be deleted by their owner; this page can delete any of them.</p>
+    </header>
+    <section id="adminBody" class="about" style="display:block;border-top:none;margin-top:0;padding-top:0">
+      <p class="note">Loading…</p>
+    </section>
+  </main>
+</div>
+<div id="modal-root"></div>
+<div id="toasts"></div>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
