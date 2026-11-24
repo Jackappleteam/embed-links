@@ -18,6 +18,18 @@ const ID_CHARS = "abcdefghijkmnpqrstuvwxyz23456789";
 const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(7)), (b) => ID_CHARS[b % 32]).join("");
 const MAX_BYTES = 8000;
 
+// Running total of links created, for the README badge. Stored under a key
+// that can't collide with a real short id (ids never contain "_" or ":").
+const STATS_KEY = "_stats:total_links";
+async function bumpLinkCount(env) {
+  try {
+    const cur = parseInt((await env.EMBEDS.get(STATS_KEY)) || "0", 10) || 0;
+    await env.EMBEDS.put(STATS_KEY, String(cur + 1));
+  } catch {
+    // best-effort only — never block link creation over a counter write
+  }
+}
+
 // Live-proxies Adcash's anti-adblock library through our own Worker domain
 // instead of their flagged domain. Nothing is stored or "rotated" — every
 // request fetches it fresh, so there's no file/filename for a blocklist to
@@ -46,6 +58,12 @@ export default {
 
     if (url.pathname === "/lib/core.js") return proxyAntiAdblock();
 
+    if (url.pathname === "/api/badge/links") {
+      if (!env.EMBEDS) return json({ schemaVersion: 1, label: "links created", message: "n/a", color: "lightgrey" });
+      const cur = parseInt((await env.EMBEDS.get(STATS_KEY)) || "0", 10) || 0;
+      return json({ schemaVersion: 1, label: "links created", message: String(cur), color: "5865f2" });
+    }
+
     if (url.pathname === "/api/create" && req.method === "POST") {
       if (!env.EMBEDS) return json({ error: "KV not configured" }, 501);
       const text = await req.text();
@@ -59,6 +77,7 @@ export default {
       let id = newId();
       for (let i = 0; i < 5 && (await env.EMBEDS.get(id)); i++) id = newId();
       await env.EMBEDS.put(id, JSON.stringify(prune(data)));
+      await bumpLinkCount(env);
       return json({ id, url: `${url.origin}/e/${id}` });
     }
 
