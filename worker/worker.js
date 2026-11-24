@@ -18,10 +18,33 @@ const ID_CHARS = "abcdefghijkmnpqrstuvwxyz23456789";
 const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(7)), (b) => ID_CHARS[b % 32]).join("");
 const MAX_BYTES = 8000;
 
+// Live-proxies Adcash's anti-adblock library through our own Worker domain
+// instead of their flagged domain. Nothing is stored or "rotated" — every
+// request fetches it fresh, so there's no file/filename for a blocklist to
+// ever learn and target.
+const AA_SOURCE = "https://adbpage.com/adblock?v=3&format=js&lnxv=2";
+async function proxyAntiAdblock() {
+  try {
+    const upstream = await fetch(AA_SOURCE, { cf: { cacheTtl: 0, cacheEverything: false } });
+    if (!upstream.ok) return new Response("", { status: 204 });
+    const body = await upstream.text();
+    return new Response(body, {
+      status: 200,
+      headers: { "content-type": "application/javascript; charset=utf-8", "cache-control": "no-store", ...CORS },
+    });
+  } catch {
+    // If Adcash's endpoint is briefly unreachable, fail quiet (empty script)
+    // rather than breaking the page with a 500.
+    return new Response("", { status: 200, headers: { "content-type": "application/javascript", ...CORS } });
+  }
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+
+    if (url.pathname === "/lib/core.js") return proxyAntiAdblock();
 
     if (url.pathname === "/api/create" && req.method === "POST") {
       if (!env.EMBEDS) return json({ error: "KV not configured" }, 501);
