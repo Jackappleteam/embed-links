@@ -11,4 +11,4 @@ id = "0adf74b4fc7f404c80c0a81e8cf5c73f"
 # Client ID is not secret — fine to commit. Client secret is NOT set here:
 # run `npx wrangler secret put DISCORD_CLIENT_SECRET` once instead.
 [vars]
-DISCORD_CLIENT_ID = "PASTE_DISCORD_CLIENT_ID_HERE"
+DISCORD_CLIENT_ID = "1574654372254589031"

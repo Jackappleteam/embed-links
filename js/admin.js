@@ -38,7 +38,7 @@ function renderAuthUI() {
           h("img", { class: "auth-av", src: avatarUrl(me), alt: "" }),
           h("span", { class: "auth-name" }, me.globalName || me.username),
           h("button", { class: "btn ghost sm", onclick: logout }, "Log out"))
-      : h("button", { class: "btn sm", onclick: () => login("/admin.html") }, "Log in with Discord"));
+      : h("button", { class: "btn sm", onclick: () => login("admin.html") }, "Log in with Discord"));
 }
 
 function fmtDate(ms) {

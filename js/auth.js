@@ -27,11 +27,16 @@ export function avatarUrl(u) {
     : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(u.discordId) % 5n)}.png`;
 }
 
-// Kicks off the Discord OAuth flow. `returnTo` is a path on the *site*
-// (GitHub Pages), e.g. "/" or "/admin.html", not the Worker.
+// Kicks off the Discord OAuth flow. `returnTo` is the bare filename to land
+// back on within the site's own folder — "" for the main page, "admin.html"
+// for the admin page — never a full path. The Worker only knows the site's
+// base folder (SITE_ORIGIN), not a full URL, so this stays a plain filename
+// rather than something resolved with URL path semantics (a leading "/"
+// there would resolve to the domain root and drop the GitHub Pages project
+// folder, e.g. "/embed-links/").
 export function login(returnTo) {
-  const path = returnTo || (location.pathname.slice(location.origin.length) + location.search) || "/";
-  location.href = `${WORKER_URL}/auth/login?return_to=${encodeURIComponent(path)}`;
+  const page = returnTo ?? (location.pathname.split("/").pop() || "");
+  location.href = `${WORKER_URL}/auth/login?return_to=${encodeURIComponent(page)}`;
 }
 
 export async function logout() {

@@ -125,10 +125,16 @@ function readCookie(req, name) {
   return m ? m.slice(name.length + 1) : null;
 }
 
+// Allowed values for return_to — the bare filename to land back on within
+// the site's own folder. Anything else falls back to the main page. Kept as
+// an allowlist (not just "looks like a relative path") since this value
+// ends up directly in a redirect URL.
+const RETURN_PAGES = new Set(["", "admin.html"]);
+
 async function handleLogin(url, env) {
   if (!env.DISCORD_CLIENT_ID) return html("<!DOCTYPE html><title>Login not configured</title><p>Discord login isn't set up on this Worker yet.</p>", 501);
   const { state, cookie } = randomStateCookie();
-  const returnTo = url.searchParams.get("return_to") || "/";
+  const returnTo = url.searchParams.get("return_to") || "";
   const packedState = `${state}.${encodeURIComponent(returnTo)}`;
   const redirectUri = `${url.origin}/auth/callback`;
   const authorize = new URL("https://discord.com/api/oauth2/authorize");
@@ -146,7 +152,8 @@ async function handleCallback(req, url, env) {
   const code = url.searchParams.get("code");
   const packedState = url.searchParams.get("state") || "";
   const [state, returnToEnc] = packedState.split(".");
-  const returnTo = returnToEnc ? decodeURIComponent(returnToEnc) : "/";
+  const returnToRaw = returnToEnc ? decodeURIComponent(returnToEnc) : "";
+  const returnTo = RETURN_PAGES.has(returnToRaw) ? returnToRaw : "";
   const cookieState = readCookie(req, "aa_oauth_state");
   if (!code || !state || state !== cookieState) return html("<!DOCTYPE html><title>Login failed</title><p>That login link expired or is invalid. Go back and try again.</p>", 400);
 
@@ -173,7 +180,11 @@ async function handleCallback(req, url, env) {
   const session = { discordId: me.id, username: me.username, globalName: me.global_name || null, avatar: me.avatar || null };
   await env.EMBEDS.put(`session:${token}`, JSON.stringify(session), { expirationTtl: SESSION_TTL });
 
-  const dest = new URL(returnTo.startsWith("/") ? returnTo : "/", SITE_ORIGIN + "/");
+  // Plain string concatenation on purpose: SITE_ORIGIN already includes the
+  // GitHub Pages project folder (".../embed-links"), and resolving returnTo
+  // with `new URL(path, base)` would treat a leading "/" as domain-root-
+  // relative, dropping that folder from the result.
+  const dest = new URL(`${SITE_ORIGIN}/${returnTo}`);
   dest.hash = `session=${token}`;
   return new Response(null, {
     status: 302,
