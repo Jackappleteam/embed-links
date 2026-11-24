@@ -65,4 +65,4 @@ Single top-level Container, up to 40 components, 3,000-byte payload, 10 gallery 
 - `js/auth.js` — shared Discord-login helpers (used by `app.js` and `admin.js`)
 - `js/config.js` — Worker URL
 - `admin.html`, `js/admin.js` — link management for the hardcoded admin Discord account
-- `worker/` — Cloudflare Worker (KV short links, Discord OAuth, anti-adblock proxy, stats badge)
+- `worker/` — Cloudflare Worker (KV short links, Discord OAuth, stats badge)
