@@ -4,7 +4,6 @@ import {
 } from "./render.js";
 import { md } from "./markdown.js";
 import { WORKER_URL } from "./config.js";
-import { authFetch, avatarUrl, login, logout as authLogout, consumeSessionFromHash, fetchMe } from "./auth.js";
 
 /* ================= tiny DOM helpers ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -68,36 +67,6 @@ const readLS = (k, d) => {
 const exportData = () => prune(structuredClone(state));
 
 const exampleLink = () => `${WORKER_URL}/e/a1b2c3d`;
-
-/* ================= auth ================= */
-let me = null; // { discordId, username, globalName, avatar, isAdmin } | null
-async function logout() {
-  await authLogout();
-  me = null;
-  renderAuthUI();
-  toast("Logged out");
-}
-async function refreshMe() {
-  me = await fetchMe();
-  renderAuthUI();
-}
-function renderAuthUI() {
-  const el = $("#railAuth");
-  if (!el) return;
-  el.replaceChildren(
-    me
-      ? h("div", { class: "auth-chip" },
-          h("img", { class: "auth-av", src: avatarUrl(me), alt: "" }),
-          h("span", { class: "auth-name" }, me.globalName || me.username),
-          me.isAdmin ? h("a", { class: "btn ghost sm", href: "./admin.html" }, "Admin") : null,
-          h("button", { class: "btn ghost sm", onclick: logout }, "Log out"))
-      : h("button", { class: "btn sm", onclick: login }, "Log in with Discord"));
-}
-function titleFromData(data) {
-  if (data.use_component) return (JSON.stringify(data.component).match(/"content":"([^"]{1,60})/)?.[1] || "Component embed").replace(/^[#\-\s]+/, "");
-  const e = data.embed || {};
-  return e.title || (e.description || "").slice(0, 50) || "Embed link";
-}
 
 /* ================= form helpers ================= */
 function wrap(label, el, extra) {
@@ -559,7 +528,7 @@ async function createLink() {
   try {
     let link = "";
     try {
-      const r = await authFetch("/api/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+      const r = await fetch(`${WORKER_URL}/api/create`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
       if (r.ok) link = (await r.json()).url;
     } catch {}
     if (!link) {
@@ -571,7 +540,10 @@ async function createLink() {
     openBtn.href = link;
     openBtn.hidden = false;
     linkInput.select();
-    setStatus(me ? "Ready. Paste it in Discord. Saved to My links." : "Ready. Paste it in Discord. Log in with Discord to save links to My links.", "on");
+    const all = readLS(LINKKEY, []);
+    all.unshift({ id: link.split("/").pop(), link, title: linkTitle(), created: Date.now(), data: exportData() });
+    localStorage.setItem(LINKKEY, JSON.stringify(all.slice(0, 100)));
+    setStatus("Ready. Paste it in Discord.", "on");
   } catch (err) {
     setStatus(err.message || String(err));
     status.style.color = "var(--red)";
@@ -580,52 +552,28 @@ async function createLink() {
 
 /* ================= my links ================= */
 function openLinks() {
-  if (!me) {
-    const body = h("div", {}, h("p", { class: "note" }, "Log in with Discord to save the links you create and see them again later, on any device."));
-    const m = modal("My links", body, [
-      h("button", { class: "btn primary", onclick: () => { m.close(); login(); } }, "Log in with Discord"),
-      h("button", { class: "btn ghost", onclick: () => m.close() }, "Close"),
-    ]);
-    return;
-  }
-  const list = h("div", { class: "links-list" }, h("div", { class: "note" }, "Loading…"));
+  const render = () => {
+    const all = readLS(LINKKEY, []);
+    list.replaceChildren(...(all.length ? all.map(item) : [h("div", { class: "note" }, "Links you create show up here.")]));
+  };
+  const item = (l) => h("div", { class: "link-item" },
+    h("div", { class: "t" }, l.title),
+    h("div", { class: "u" }, l.link),
+    h("div", { class: "b" },
+      h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(l.link).then(() => toast("Link copied", "good")) }, "Copy"),
+      h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(invisLink(l.link)).then(() => toast("Invisible link copied", "good")) }, "Copy invisible"),
+      h("button", { class: "btn sm", onclick: () => { state = normalize(l.data); save(); setTab("builder"); update(); m.close(); toast("Loaded into the editor"); } }, "Edit as new"),
+      h("button", { class: "btn sm danger", onclick: () => {
+        localStorage.setItem(LINKKEY, JSON.stringify(readLS(LINKKEY, []).filter((x) => x.id !== l.id)));
+        render();
+      } }, "Remove")));
+  const list = h("div", { class: "links-list" });
+  render();
   const m = modal("My links", list, [h("button", { class: "btn primary", onclick: () => m.close() }, "Close")]);
-  (async () => {
-    let links;
-    try {
-      const r = await authFetch("/api/my-links");
-      if (!r.ok) throw new Error();
-      links = (await r.json()).links;
-    } catch {
-      list.replaceChildren(h("div", { class: "note" }, "Couldn't load your links. Try again in a moment."));
-      return;
-    }
-    const render = () => {
-      list.replaceChildren(...(links.length ? links.map(item) : [h("div", { class: "note" }, "Links you create show up here.")]));
-    };
-    const item = (l) => h("div", { class: "link-item" },
-      h("div", { class: "t" }, titleFromData(l.data)),
-      h("div", { class: "u" }, l.url),
-      h("div", { class: "b" },
-        h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(l.url).then(() => toast("Link copied", "good")) }, "Copy"),
-        h("button", { class: "btn sm", onclick: () => navigator.clipboard.writeText(invisLink(l.url)).then(() => toast("Invisible link copied", "good")) }, "Copy invisible"),
-        h("button", { class: "btn sm", onclick: () => { state = normalize(l.data); save(); setTab("builder"); update(); m.close(); toast("Loaded into the editor"); } }, "Edit as new"),
-        h("button", { class: "btn sm danger", onclick: async () => {
-          const dr = await authFetch(`/api/links/${l.id}`, { method: "DELETE" });
-          if (!dr.ok) return toast("Couldn't delete that link", "bad");
-          links = links.filter((x) => x.id !== l.id);
-          render();
-          toast("Link deleted", "good");
-        } }, "Delete")));
-    render();
-  })();
 }
 
 /* ================= init ================= */
 function init() {
-  consumeSessionFromHash();
-  renderAuthUI();
-  refreshMe();
   $("#railLinks").innerHTML = I.list;
   $("#railLinks").onclick = openLinks;
   $("#createBtn").onclick = createLink;

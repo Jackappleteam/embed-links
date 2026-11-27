@@ -32,9 +32,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .rail-btn svg{display:none}
 .rail-btn:hover{background:var(--surface-2);color:var(--text);border-color:var(--text)}
 .rail-btn.active{display:none}
-.auth-chip{display:flex;align-items:center;gap:8px}
-.auth-av{width:22px;height:22px;border-radius:999px;object-fit:cover;background:var(--surface-2)}
-.auth-name{font:500 13px/1 var(--font);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .page{max-width:1160px;margin:0 auto;padding:16px 20px 90px}
 .head h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:22px 0 14px}
@@ -215,7 +212,3 @@ button,input,select,textarea{font:inherit;color:inherit}
 .dc{text-align:left}
 .dc a.dc-btn,.dc a.dc-btn:hover{text-decoration:none;color:#fff}
 .dc-link{text-decoration:none}.dc-link:hover{text-decoration:underline}
-.admin-table{width:100%;border-collapse:collapse;font-size:13.5px}
-.admin-table th,.admin-table td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
-.admin-table th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
-.admin-table a{color:var(--link)}
