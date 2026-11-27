@@ -2,14 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- anti-adblock:start -->
-<script id="aa-lib" type="text/javascript" src="https://embed-links.jackappleteam.workers.dev/lib/core.js"></script>
-<!-- anti-adblock:end -->
-<script type="text/javascript">
-  aclib.runAutoTag({
-    zoneId: 'eg4kbf9ezs',
-  });
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Unfurl — Discord Embed Link Generator (Components V2)</title>
 <meta name="description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook, no account — just a builder, a JSON editor, and a live preview.">
@@ -29,6 +21,7 @@
 <meta name="twitter:description" content="Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed.">
 <meta name="twitter:image" content="https://jackappleteam.github.io/embed-links/assets/banner.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23fafaf9'/%3E%3Cpath d='M9 12h14M9 17h9M9 22h12' stroke='%230c0a09' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Unfurl","alternateName":"Discord Embed Link Generator","url":"https://jackappleteam.github.io/embed-links/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unfurl","alternateName":"Discord Embed Link Generator","url":"https://jackappleteam.github.io/embed-links/","description":"Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed.","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Components V2?","acceptedAnswer":{"@type":"Answer","text":"Components V2 is Discord's newer layout system for link previews — containers, text, dividers, image galleries and buttons instead of the classic title/description embed. Unfurl builds either kind of link."}},{"@type":"Question","name":"Do I need a bot or webhook?","acceptedAnswer":{"@type":"Answer","text":"No. The link itself carries the embed data. Discord reads it when the link is pasted, the same way it reads a normal website preview — no bot token, server, or webhook required."}},{"@type":"Question","name":"How do I use it?","acceptedAnswer":{"@type":"Answer","text":"Fill in the builder or paste JSON, check the live preview on the right, then press Create Link. Paste the generated link into any Discord message to see it unfurl."}}]}</script>
 <script id="discord:component-embed" type="application/json">{"component":{"type":17,"accent_color":16448249,"components":[{"type":10,"content":"-# Unfurl"},{"type":9,"components":[{"type":10,"content":"## [Discord Embed Link Generator](https://jackappleteam.github.io/embed-links/)"},{"type":10,"content":"Create links that Discord unfurls into rich embeds or Components V2 layouts. No bot, no webhook needed."}],"accessory":{"type":11,"media":{"url":"https://jackappleteam.github.io/embed-links/assets/icon.png"}}},{"type":14,"divider":true,"spacing":1},{"type":12,"items":[{"media":{"url":"https://jackappleteam.github.io/embed-links/assets/banner.png"}}]},{"type":14,"divider":true,"spacing":1},{"type":1,"components":[{"type":2,"style":5,"url":"https://jackappleteam.github.io/embed-links/","label":"Open the tool"},{"type":2,"style":5,"url":"https://github.com/Jackappleteam/embed-links","label":"GitHub"}]}]}}</script>
@@ -42,6 +35,7 @@
   <nav class="rail" aria-label="Main">
     <div class="rail-logo"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0c0a09" stroke-width="3.2" stroke-linecap="round"><path d="M5 8h14M5 13h9M5 18h12"/></svg></span>Unfurl</div>
     <div class="rail-spacer-x"></div>
+    <div id="railAuth"></div>
     <button class="rail-btn" data-label="My links" title="My links" aria-label="My links" id="railLinks"></button>
   </nav>
 
